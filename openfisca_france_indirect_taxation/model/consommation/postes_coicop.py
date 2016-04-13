@@ -113,7 +113,6 @@ def generate_depenses_ht_postes_variables(categories_fiscales = None, Reform = N
 
 
 def generate_postes_agreges_variables(categories_fiscales = None, Reform = None, tax_benefit_system = None):
-
     codes_bdf = [element for element in codes_coicop_data_frame.code_bdf.unique()]
     for num_prefix in ["0{}".format(i) for i in range(1, 10)] + ["10", "11", "12"]:
         codes_coicop = codes_coicop_data_frame.loc[
@@ -123,11 +122,70 @@ def generate_postes_agreges_variables(categories_fiscales = None, Reform = None,
         log.info(u'Creating variable {} with label {} using {}'.format(class_name, num_prefix, codes_coicop))
 
         # Trick to create a class with a dynamic name.
-        dated_func = depenses_postes_agreges_function_creator(
-            codes_coicop,
-            categories_fiscales = categories_fiscales,
-            Reform = Reform,
-            )
+        # dated_func = depenses_postes_agreges_function_creator(
+        #     codes_coicop,
+        #     categories_fiscales = categories_fiscales,
+        #     Reform = Reform,
+        #     )
+
+        postes_coicop = codes_coicop
+        year_start, start = None, None
+        year_stop, stop = None, None
+        dated_func = None
+        if len(postes_coicop) != 0:
+            if not Reform:
+                @dated_function(start = start, stop = stop)
+                def func(self, simulation, period):
+                    return period, sum(simulation.calculate(
+                        'poste_' + slugify(poste, separator = u'_'), period) for poste in postes_coicop
+                        )
+                func.__name__ = "function_{year_start}_{year_stop}".format(
+                    year_start = year_start, year_stop = year_stop)
+                dated_func = func
+
+            elif Reform is not None and categories_fiscales is not None:
+                # print categories_fiscales[['code_coicop', 'categorie_fiscale']]
+                categorie_fiscale_by_poste = dict(
+                    (poste, get_poste_categorie_fiscale(poste, categories_fiscales)[0])
+                    for poste in postes_coicop)
+
+                if postes_coicop[0][:2] == '01':
+                    print 'x', id(categorie_fiscale_by_poste)
+                    for key, value in sorted(categorie_fiscale_by_poste.iteritems()):
+                        print 'a', key, value
+                if Reform.key == 'aliss_tva_sociale' and postes_coicop[0][:2] == '01':
+                    for key in ['01.1.1.1.1', '01.1.1.3.3']:
+                        assert categorie_fiscale_by_poste[key] == 'tva_taux_intermediaire', 'key: {} -> {}'.format(
+                            key, categorie_fiscale_by_poste[key]
+                            )
+
+                @dated_function(start = start, stop = stop)
+                def func(self, simulation, period):
+                    print 'y', id(categorie_fiscale_by_poste)
+                    print 'b', sorted(postes_coicop)
+                    for key, value in sorted(categorie_fiscale_by_poste.iteritems()):
+                        print 'c', key, value
+                    # import ipdb; ipdb.set_trace()
+
+                    for key in ['01.1.1.1.1', '01.1.1.3.3']:
+                        assert categorie_fiscale_by_poste[key] == 'tva_taux_intermediaire', 'key: {} -> {}'.format(
+                            key, categorie_fiscale_by_poste[key]
+                            )
+
+                    poste_agrege = sum(simulation.calculate(
+                        'depenses_ht_poste_' + slugify(poste, separator = u'_'), period
+                        ) * (
+                            1 + simulation.legislation_at(period.start).imposition_indirecte.tva[
+                                categorie_fiscale_by_poste[poste][4:]
+                                ]
+                            )
+                        for poste in postes_coicop
+                        )
+                    return period, poste_agrege
+
+                func.__name__ = "function_{year_start}_{year_stop}".format(
+                    year_start = year_start, year_stop = year_stop)
+                dated_func = func
 
         functions_by_name = dict(function = dated_func)
         label = u"Poste agrégé {}".format(num_prefix)

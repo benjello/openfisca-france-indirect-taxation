@@ -140,6 +140,7 @@ def get_poste_categorie_fiscale(poste_coicop, categories_fiscales = None, start 
 
 def depenses_postes_agreges_function_creator(postes_coicop, categories_fiscales = None, Reform = None,
         year_start = None, year_stop = None):
+        raise NotImplementedError()
         start = date(year_start, 1, 1) if year_start is not None else None
         stop = date(year_stop, 12, 31) if year_stop is not None else None
         if len(postes_coicop) != 0:
@@ -158,9 +159,11 @@ def depenses_postes_agreges_function_creator(postes_coicop, categories_fiscales 
                 categorie_fiscale_by_poste = dict(
                     (poste, get_poste_categorie_fiscale(poste, categories_fiscales)[0])
                     for poste in postes_coicop)
-                for key, value in sorted(categorie_fiscale_by_poste.iteritems()):
-                    print 'a', key, value
 
+                if postes_coicop[0][:2] == '01':
+                    print 'x', id(categorie_fiscale_by_poste)
+                    for key, value in sorted(categorie_fiscale_by_poste.iteritems()):
+                        print 'a', key, value
                 if Reform.key == 'aliss_tva_sociale' and postes_coicop[0][:2] == '01':
                     for key in ['01.1.1.1.1', '01.1.1.3.3']:
                         assert categorie_fiscale_by_poste[key] == 'tva_taux_intermediaire', 'key: {} -> {}'.format(
@@ -168,10 +171,12 @@ def depenses_postes_agreges_function_creator(postes_coicop, categories_fiscales 
                             )
 
                 @dated_function(start = start, stop = stop)
-                def func(self, simulation, period, categorie_fiscale_by_poste = categorie_fiscale_by_poste):
+                def func(self, simulation, period):
+                    print 'y', id(categorie_fiscale_by_poste)
                     print 'b', sorted(postes_coicop)
                     for key, value in sorted(categorie_fiscale_by_poste.iteritems()):
                         print 'c', key, value
+                    import ipdb; ipdb.set_trace()
 
                     for key in ['01.1.1.1.1', '01.1.1.3.3']:
                         assert categorie_fiscale_by_poste[key] == 'tva_taux_intermediaire', 'key: {} -> {}'.format(
