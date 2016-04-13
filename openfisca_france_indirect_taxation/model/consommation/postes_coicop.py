@@ -200,7 +200,14 @@ def generate_postes_agreges_variables(categories_fiscales = None, Reform = None,
                 reference = tax_benefit_system.column_by_name[class_name.encode('utf-8')]
                 )
         definitions_by_name.update(functions_by_name)
-        type(class_name.encode('utf-8'), (DatedVariable,), definitions_by_name)
+        from openfisca_core import formulas
+        formulas.new_filled_column(
+            name = class_name.encode('utf-8'),
+            colum = FloatCol,
+            entity_class = Menages,
+            label = label,
+            (DatedVariable,), definitions_by_name)
+
         del definitions_by_name
 
 
