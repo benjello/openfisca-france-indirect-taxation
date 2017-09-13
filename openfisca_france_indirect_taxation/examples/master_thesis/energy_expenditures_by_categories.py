@@ -24,7 +24,7 @@ simulated_variables = ['depenses_carburants', 'depenses_energies_totales', 'depe
 
 survey_scenario = SurveyScenario.create(
     elasticities = elasticities,
-    #inflation_kwargs = inflation_kwargs,
+    inflation_kwargs = inflation_kwargs,
     #reform_key = 'taxe_carbone',
     year = year,
     data_year = data_year
