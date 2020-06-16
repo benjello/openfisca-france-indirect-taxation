@@ -1,0 +1,11 @@
+- name: "+10 diesel 2014"
+  period: "2014"
+  reforms:
+  - openfisca_france_indirect_taxation.reforms.reforme_energie_test.reforme_energie_test
+  input:
+    depenses_diesel: 1000
+    elas_price_1_1: -0.4
+  output:
+    depenses_diesel: 1000
+    elas_price_1_1: -0.4
+    depenses_diesel_ajustees: 1000 * (1 + (1 - 0.4) * (10 / 128.562))

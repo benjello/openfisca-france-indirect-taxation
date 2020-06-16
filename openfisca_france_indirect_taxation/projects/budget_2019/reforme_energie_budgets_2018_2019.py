@@ -103,7 +103,7 @@ class officielle_2019_in_2017(Reform):
     class depenses_carburants_corrigees_officielle_2019_in_2017(YearlyVariable):
         value_type = float
         entity = Menage
-        label = "Depenses en carburants après reaction a la reforme"
+        label = "Dépenses en carburants après réaction à la réforme"
 
         def formula(menage, period, parameters):
             depenses_diesel_ajustees = menage('depenses_diesel_corrigees_officielle_2019_in_2017', period)
@@ -244,74 +244,6 @@ class officielle_2019_in_2017(Reform):
                 )
 
             return montant_diesel_ticpe_ajuste
-
-    class diesel_ticpe_rattrapage_integral(YearlyVariable):
-        value_type = float
-        entity = Menage
-        label = "Calcul du montant de TICPE sur le diesel après réforme"
-
-        def formula(menage, period, parameters):
-            taux_plein_tva = parameters(period.start).imposition_indirecte.tva.taux_de_tva.taux_normal
-
-            # If the parameter does not have a defined value, it returns None
-            majoration_ticpe_diesel = \
-                parameters(period.start).imposition_indirecte.produits_energetiques.major_regionale_ticpe_gazole.alsace
-
-            accise_diesel = parameters(period.start).imposition_indirecte.produits_energetiques.ticpe.gazole
-
-            accise_diesel_ticpe = (
-                accise_diesel + majoration_ticpe_diesel
-                if majoration_ticpe_diesel is not None
-                else accise_diesel
-                )
-
-            taxe_essence = parameters(period.start).imposition_indirecte.produits_energetiques.ticpe.super_95_98
-            taxe_diesel = parameters(period.start).imposition_indirecte.produits_energetiques.ticpe.gazole
-            reforme_diesel = taxe_essence - taxe_diesel
-            accise_diesel_ticpe_ajustee = accise_diesel_ticpe + reforme_diesel
-            prix_diesel_ttc = parameters(period.start).prix_carburants.diesel_ttc
-            prix_diesel_ttc_ajuste = prix_diesel_ttc + reforme_diesel
-            taux_implicite_diesel_ajuste = (
-                (accise_diesel_ticpe_ajustee * (1 + taux_plein_tva))
-                / (prix_diesel_ttc_ajuste - accise_diesel_ticpe_ajustee * (1 + taux_plein_tva))
-                )
-
-            depenses_diesel_rattrapage_integral = \
-                menage('depenses_diesel_corrigees_rattrapage_integral', period)
-            depenses_diesel_htva_ajustees = (
-                depenses_diesel_rattrapage_integral
-                - tax_from_expense_including_tax(depenses_diesel_rattrapage_integral, taux_plein_tva)
-                )
-            montant_diesel_ticpe_ajuste = (
-                tax_from_expense_including_tax(depenses_diesel_htva_ajustees, taux_implicite_diesel_ajuste)
-                )
-
-            return montant_diesel_ticpe_ajuste
-
-    class essence_ticpe_officielle_2019_in_2017(YearlyVariable):
-        value_type = float
-        entity = Menage
-        label = "Calcul du montant de la TICPE sur toutes les essences cumulées, après réforme"
-
-        def formula_2009(menage, period):
-            sp95_ticpe_ajustee = menage('sp95_ticpe_officielle_2019_in_2017', period)
-            sp98_ticpe_ajustee = menage('sp98_ticpe_officielle_2019_in_2017', period)
-            sp_e10_ticpe_ajustee = menage('sp_e10_ticpe_officielle_2019_in_2017', period)
-            essence_ticpe_ajustee = (sp95_ticpe_ajustee + sp98_ticpe_ajustee + sp_e10_ticpe_ajustee)
-            return essence_ticpe_ajustee
-
-        def formula_2007(menage, period):
-            sp95_ticpe_ajustee = menage('sp95_ticpe_officielle_2019_in_2017', period)
-            sp98_ticpe_ajustee = menage('sp98_ticpe_officielle_2019_in_2017', period)
-            essence_ticpe_ajustee = (sp95_ticpe_ajustee + sp98_ticpe_ajustee)
-            return essence_ticpe_ajustee
-
-        def formula_1990(menage, period, parameters):
-            sp95_ticpe_ajustee = menage('sp95_ticpe_officielle_2019_in_2017', period)
-            sp98_ticpe_ajustee = menage('sp98_ticpe_officielle_2019_in_2017', period)
-            super_plombe_ticpe_ajustee = menage('super_plombe_ticpe_officielle_2019_in_2017', period)
-            essence_ticpe_ajustee = (sp95_ticpe_ajustee + sp98_ticpe_ajustee + super_plombe_ticpe_ajustee)
-            return essence_ticpe_ajustee
 
     class gains_tva_carburants_officielle_2019_in_2017(YearlyVariable):
         value_type = float
@@ -600,34 +532,17 @@ class officielle_2019_in_2017(Reform):
 
             return recettes_gaz
 
-    class ticpe_totale_officielle_2019_in_2017(YearlyVariable):
-        value_type = float
-        entity = Menage
-        label = "Calcul du montant de la TICPE sur tous les carburants cumulés, après réforme"
-
-        def formula(menage, period):
-            essence_ticpe_ajustee = menage('essence_ticpe_officielle_2019_in_2017', period)
-            diesel_ticpe_ajustee = menage('diesel_ticpe_officielle_2019_in_2017', period)
-            ticpe_totale_ajustee = diesel_ticpe_ajustee + essence_ticpe_ajustee
-
-            return ticpe_totale_ajustee
-
     class total_taxes_energies_officielle_2019_in_2017(YearlyVariable):
         value_type = float
         entity = Menage
         label = "Différence entre les contributions aux taxes sur l'énergie après la hausse cce 2016-2018"
 
         def formula(menage, period):
-            taxe_diesel = menage('diesel_ticpe_officielle_2019_in_2017', period)
-            taxe_essence = menage('essence_ticpe_officielle_2019_in_2017', period)
-            taxe_combustibles_liquides = menage('combustibles_liquides_ticpe_officielle_2019_in_2017', period)
+            essence_ticpe = menage('essence_ticpe', period)
+            diesel_ticpe = menage('diesel_ticpe', period)
+            combustibles_liquides_ticpe = menage('combustibles_liquides_ticpe', period)
             taxe_gaz_ville = menage('taxe_gaz_ville_officielle_2019_in_2017', period)
-
-            total = (
-                taxe_diesel + taxe_essence + taxe_combustibles_liquides + taxe_gaz_ville
-                )
-
-            return total
+            return diesel_ticpe + essence_ticpe + combustibles_liquides_ticpe + taxe_gaz_ville
 
     def apply(self):
         self.update_variable(self.cheques_energie)
@@ -639,7 +554,6 @@ class officielle_2019_in_2017(Reform):
         self.update_variable(self.depenses_essence_corrigees_officielle_2019_in_2017)
         self.update_variable(self.depenses_gaz_ville_officielle_2019_in_2017)
         self.update_variable(self.diesel_ticpe_officielle_2019_in_2017)
-        self.update_variable(self.essence_ticpe_officielle_2019_in_2017)
         self.update_variable(self.gains_tva_carburants_officielle_2019_in_2017)
         self.update_variable(self.gains_tva_combustibles_liquides_officielle_2019_in_2017)
         self.update_variable(self.gains_tva_gaz_ville_officielle_2019_in_2017)
@@ -651,6 +565,5 @@ class officielle_2019_in_2017(Reform):
         self.update_variable(self.sp98_ticpe_officielle_2019_in_2017)
         self.update_variable(self.super_plombe_ticpe_officielle_2019_in_2017)
         self.update_variable(self.taxe_gaz_ville_officielle_2019_in_2017)
-        self.update_variable(self.ticpe_totale_officielle_2019_in_2017)
         self.update_variable(self.total_taxes_energies_officielle_2019_in_2017)
         self.modify_parameters(modifier_function = modify_parameters)

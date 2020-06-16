@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
-
+from openfisca_core.parameters import ParameterNotFound
 from openfisca_france_indirect_taxation.variables.base import *  # noqa analysis:ignore
 
-import numpy
+
+
 
 
 class depenses_essence_ajustees(YearlyVariable):
@@ -13,13 +12,24 @@ class depenses_essence_ajustees(YearlyVariable):
 
     def formula(menage, period, parameters):
         depenses_essence = menage('depenses_essence', period)
-        super_95_ttc = parameters(period.start).prix_carburants.super_95_ttc
-        reforme_essence = parameters(period.start).rattrapage_diesel.essence
-        carburants_elasticite_prix = menage('elas_price_1_1', period)
-        depenses_essence_ajustees = (
-            depenses_essence * (1 + (1 + carburants_elasticite_prix) * reforme_essence / super_95_ttc)
-            )
-        return depenses_essence_ajustees
+        try:
+            super_95_ttc_reference = parameters(period.start).prix_carburants.super_95_ttc_reference
+            assert super_95_ttc_reference is not None
+            delta_super_95_ttc = (
+                parameters(period.start).prix_carburants.super_95_ttc
+                - super_95_ttc_reference
+                )
+        except ParameterNotFound:
+            delta_super_95_ttc = None
+
+        if delta_super_95_ttc:
+            carburants_elasticite_prix = menage('elas_price_1_1', period)
+            depenses_essence_ajustees = (
+                depenses_essence * (1 + (1 + carburants_elasticite_prix) * delta_super_95_ttc / super_95_ttc_reference)
+                )
+            return depenses_essence_ajustees
+        else:
+            return depenses_essence
 
 
 class depenses_diesel_ajustees(YearlyVariable):
@@ -29,13 +39,25 @@ class depenses_diesel_ajustees(YearlyVariable):
 
     def formula(menage, period, parameters):
         depenses_diesel = menage('depenses_diesel', period)
-        diesel_ttc = parameters(period.start).prix_carburants.diesel_ttc
-        reforme_diesel = parameters(period.start).rattrapage_diesel.diesel
-        carburants_elasticite_prix = menage('elas_price_1_1', period)
-        depenses_diesel_ajustees = \
-            depenses_diesel * (1 + (1 + carburants_elasticite_prix) * reforme_diesel / diesel_ttc)
+        try:
+            diesel_ttc_reference = parameters(period.start).prix_carburants.diesel_ttc_reference
 
-        return depenses_diesel_ajustees
+            assert diesel_ttc_reference is not None
+            delta_diesel_ttc = (
+                parameters(period.start).prix_carburants.diesel_ttc
+                - diesel_ttc_reference
+                )
+        except ParameterNotFound:
+            delta_diesel_ttc = None
+
+        if delta_diesel_ttc:
+            carburants_elasticite_prix = menage('elas_price_1_1', period)
+            depenses_diesel_ajustees = (
+                depenses_diesel * (1 + (1 + carburants_elasticite_prix) * delta_diesel_ttc / diesel_ttc_reference)
+                )
+            return depenses_diesel_ajustees
+        else:
+            return depenses_diesel
 
 
 class depenses_gaz_ville_ajustees_taxe_carbone(YearlyVariable):
