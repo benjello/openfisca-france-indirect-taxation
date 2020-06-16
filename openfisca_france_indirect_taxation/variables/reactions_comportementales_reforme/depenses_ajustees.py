@@ -2,9 +2,6 @@ from openfisca_core.parameters import ParameterNotFound
 from openfisca_france_indirect_taxation.variables.base import *  # noqa analysis:ignore
 
 
-
-
-
 class depenses_essence_ajustees(YearlyVariable):
     value_type = float
     entity = Menage
