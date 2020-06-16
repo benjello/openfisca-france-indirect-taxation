@@ -8,8 +8,7 @@ parameters_path = os.path.join(os.path.dirname(__file__), 'parameters')
 
 
 def modify_parameters(parameters):
-    reference = parameters.prix_carburants.diesel_ttc.clone()
-    parameters.prix_carburants.add_child("diesel_ttc_reference", reference)
+    parameters = build_prix_carburants_reference(parameters)
     reference_value = parameters.prix_carburants.diesel_ttc_reference(2014)
     parameters.prix_carburants.diesel_ttc.update(
         period = '2014',
@@ -24,3 +23,13 @@ class reforme_energie_test(Reform):
 
     def apply(self):
         self.modify_parameters(modifier_function = modify_parameters)
+
+
+# Helpers
+
+def build_prix_carburants_reference(parameters):
+    for child_key, child_node in parameters.prix_carburants.children.copy().items():
+        reference = child_node.clone()
+        parameters.prix_carburants.add_child("{}_reference".format(child_key), reference)
+
+    return parameters

@@ -5,7 +5,9 @@
   input:
     depenses_diesel: 1000
     elas_price_1_1: -0.4
+    depenses_essence: 1000
   output:
     depenses_diesel: 1000
     elas_price_1_1: -0.4
     depenses_diesel_ajustees: 1000 * (1 + (1 - 0.4) * (10 / 128.562))
+    depenses_essence_ajustees: 1000
