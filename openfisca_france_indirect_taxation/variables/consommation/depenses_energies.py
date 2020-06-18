@@ -10,7 +10,7 @@ from openfisca_france_indirect_taxation.variables.base import *  # noqa analysis
 log = logging.getLogger(__name__)
 
 
-class depenses_carburants(YearlyVariable):
+class poste_carburants(YearlyVariable):
     value_type = float
     entity = Menage
     label = "Consommation de carburants"
@@ -40,7 +40,7 @@ class depenses_combustibles_solides(YearlyVariable):
         return depenses_combustibles_solides
 
 
-class depenses_diesel(YearlyVariable):
+class poste_diesel(YearlyVariable):
     value_type = float
     entity = Menage
     label = "Construction par pondération des dépenses spécifiques au diesel"
@@ -66,16 +66,16 @@ class depenses_diesel(YearlyVariable):
 
         part_conso_diesel = (nombre_vehicules_diesel * conso_moyenne_vp_diesel) / denominateur
 
-        depenses_carburants = menage('depenses_carburants', period)
+        poste_carburants = menage('poste_carburants', period)
 
-        depenses_diesel = depenses_carburants * (
+        poste_diesel = poste_carburants * (
             (nombre_vehicules_total == 0) * (
                 conso_totale_vp_diesel / (conso_totale_vp_diesel + conso_totale_vp_essence)
                 )
             + (nombre_vehicules_total != 0) * part_conso_diesel
             )
 
-        return depenses_diesel
+        return poste_diesel
 
 
 class depenses_diesel_htva(YearlyVariable):
@@ -319,17 +319,17 @@ class depenses_energies_totales(YearlyVariable):
         return depenses_energies_totales
 
 
-class depenses_essence(YearlyVariable):
+class poste_essence(YearlyVariable):
     value_type = float
     entity = Menage
     label = "Construction par déduction des dépenses spécifiques à l'essence"
 
     def formula(menage, period):
-        depenses_carburants = menage('depenses_carburants', period)
-        depenses_diesel = menage('depenses_diesel', period)
-        depenses_essence = depenses_carburants - depenses_diesel
+        poste_carburants = menage('poste_carburants', period)
+        poste_diesel = menage('poste_diesel', period)
+        poste_essence = poste_carburants - poste_diesel
 
-        return depenses_essence
+        return poste_essence
 
 
 class depenses_essence_ht(Variable):
@@ -490,9 +490,9 @@ class depenses_sp_e10(YearlyVariable):
     label = "Construction par pondération des dépenses spécifiques au sans plomb e10"
 
     def formula(menage, period, parameters):
-        depenses_essence = menage('depenses_essence', period)
+        poste_essence = menage('poste_essence', period)
         part_sp_e10 = parameters(period.start).imposition_indirecte.part_type_supercarburants.sp_e10
-        depenses_sp_e10 = depenses_essence * part_sp_e10
+        depenses_sp_e10 = poste_essence * part_sp_e10
 
         return depenses_sp_e10
 
@@ -654,8 +654,10 @@ class depenses_super_plombe_ht(YearlyVariable):
         depenses_super_plombe = depenses_essence * part_super_plombe
         depenses_super_plombe_htva = \
             depenses_super_plombe - tax_from_expense_including_tax(depenses_super_plombe, taux_plein_tva)
-        depenses_super_plombe_ht = (depenses_super_plombe_htva
-- tax_from_expense_including_tax(depenses_super_plombe_htva, taux_implicite_super_plombe))
+        depenses_super_plombe_ht = (
+            depenses_super_plombe_htva
+            - tax_from_expense_including_tax(depenses_super_plombe_htva, taux_implicite_super_plombe)
+            )
 
         return depenses_super_plombe_ht
 

@@ -229,7 +229,7 @@ def get_inflators_energy(target_year):
 
 
 def get_inflators_by_year_energy(rebuild = False):
-    if rebuild is not False:
+    if rebuild:
         inflators_by_year = dict()
         for target_year in range(2000, 2017):
             inflators = get_inflators_energy(target_year)
@@ -250,6 +250,12 @@ def get_inflators_by_year_energy(rebuild = False):
             inflators_from_csv_by_year = inflators_from_csv[inflators_from_csv[2] == year]
             inflators_to_dict = pd.DataFrame.to_dict(inflators_from_csv_by_year)
             inflators = inflators_to_dict[1]
+
+            # Rename to match openfisca input variables
+            inflators['poste_carburants'] = inflators.pop('depenses_carburants')
+            inflators['poste_diesel'] = inflators.pop('depenses_diesel')
+            inflators['poste_essence'] = inflators.pop('depenses_essence')
+
             re_build_inflators[year] = inflators
 
         return re_build_inflators

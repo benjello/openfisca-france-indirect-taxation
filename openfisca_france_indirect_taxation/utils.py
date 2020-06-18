@@ -45,9 +45,9 @@ def get_input_data_frame(year, use_entd = True):
 
         input_data_frame.rename(
             columns = {
-                'depenses_carburants_corrigees_entd': 'depenses_carburants',
-                'depenses_diesel_corrigees_entd': 'depenses_diesel',
-                'depenses_essence_corrigees_entd': 'depenses_essence',
+                'depenses_carburants_corrigees_entd': 'poste_carburants',
+                'depenses_diesel_corrigees_entd': 'poste_diesel',
+                'depenses_essence_corrigees_entd': 'poste_essence',
                 },
             inplace = True,
             )

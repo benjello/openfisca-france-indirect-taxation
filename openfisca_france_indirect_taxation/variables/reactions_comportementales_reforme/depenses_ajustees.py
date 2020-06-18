@@ -2,13 +2,22 @@ from openfisca_core.parameters import ParameterNotFound
 from openfisca_france_indirect_taxation.variables.base import *  # noqa analysis:ignore
 
 
-class depenses_essence_ajustees(YearlyVariable):
+class depenses_carburants(YearlyVariable):
     value_type = float
     entity = Menage
-    label = "Dépenses en essence après réaction à la réforme des prix"
+    label = "Consommation de carburants"
+
+    def formula(menage, period):
+        return menage('depenses_diesel', period) + menage('depenses_essence', period)
+
+
+class depenses_essence(YearlyVariable):
+    value_type = float
+    entity = Menage
+    label = "Dépenses en essence tenant compte d'une éventuelle réponse à une évolution des prix"
 
     def formula(menage, period, parameters):
-        depenses_essence = menage('depenses_essence', period)
+        depenses_essence = menage('poste_essence', period)
         try:
             super_95_ttc_reference = parameters(period.start).prix_carburants.super_95_ttc_reference
             assert super_95_ttc_reference is not None
@@ -29,13 +38,13 @@ class depenses_essence_ajustees(YearlyVariable):
             return depenses_essence
 
 
-class depenses_diesel_ajustees(YearlyVariable):
+class depenses_diesel(YearlyVariable):
     value_type = float
     entity = Menage
-    label = "Dépenses en diesel après réaction à la réforme des prix"
+    label = "Dépenses en diesel  tenant compte d'une éventuelle réponse à une évolution des prix"
 
     def formula(menage, period, parameters):
-        depenses_diesel = menage('depenses_diesel', period)
+        depenses_diesel = menage('poste_diesel', period)
         try:
             diesel_ttc_reference = parameters(period.start).prix_carburants.diesel_ttc_reference
 
@@ -55,6 +64,8 @@ class depenses_diesel_ajustees(YearlyVariable):
             return depenses_diesel_ajustees
         else:
             return depenses_diesel
+
+# TODO: remove *_taxe_carbone variables ?
 
 
 class depenses_gaz_ville_ajustees_taxe_carbone(YearlyVariable):
